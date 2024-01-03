@@ -1,0 +1,290 @@
+---
+title: "Exercise 7"
+author: "Rotem Kashani and Gal Drimer"
+date: "2023-05-05"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+
+For each one of the questions below, calculate: the possible values of X (Rx),
+the probability function (P(X)) and the expected value (E[X]). In addition,
+through simulation, create a barplot showing an approximation to P(x), when 
+simulating the experiment 10000 times. a) In a box there are 8 balls, 3 of them
+are red and 5 are black. Three balls are drawn without replacement. 
+Let X be the number of black balls drawn. b) A experiment is performed with a 
+success probability of 0.3, repeatedly until 5 successes are obtained, and then
+the experiment stops. Let X be the number of trials performed. 
+c) An urn contains 20 numbered balls (1,. . . 20). A player draws two balls at 
+random from the urn. If the two numbers drawn add up to 20, the player wins 10 
+shekels. If the two numbers are consecutive (i.e., their absolute 
+difference is 1), the player wins 20 shekels. Otherwise, the player loses 5 
+shekels. Let X be the player’s profit in the game.
+
+#### 1.1
+
+answer:
+
+Rx={0,1,2,3}
+
+P(X)=(choose(3,5)xchoose(0,3))/choose(3,8)=5/28=0.178
+
+E[X]=0xP(X=0)+1xP(X=1)+2xP(X=2)+3xP(X=3)=
+0x1/56+1x15/56+2x45/112+3x5/28=45/28=1.607
+
+```{r 1.1}
+balls <- c(rep("black", 5), rep("red", 3))
+simulations <- 10000
+results <- numeric(simulations)
+
+for (i in 1:simulations) {
+  drawn_balls <- sample(balls, 3, replace = FALSE)
+  black_balls <- sum(drawn_balls == "black")
+  results[i] <- black_balls
+}
+
+probabilities <- table(results) / simulations
+barplot(probabilities, xlab = "Number of Black Balls Drawn",
+        ylab = "Probability",main = "Results")
+
+
+```
+
+#### 1.2
+
+answer:
+
+Rx={5,6,7,...}
+
+P(x)=choose(k-1,4))x0.3ˆ5 x(1-0.3)ˆ(k-5)
+
+```{r 1.2}
+success_prob <- 0.3
+num_successes <- 5
+num_simulations <- 10000
+
+simulate_experiment <- function() {
+  num_trials <- 0
+  num_success <- 0
+  
+  while (num_success < num_successes) {
+    num_trials <- num_trials + 1
+    
+    if (runif(1) < success_prob) {
+      num_success <- num_success + 1
+    }
+  }
+  
+  return(num_trials)
+}
+
+sim_results <- replicate(num_simulations, simulate_experiment())
+
+trial_counts <- table(sim_results)
+
+probabilities <- trial_counts / num_simulations
+
+mean_trials <- sum(sim_results) / num_simulations
+
+barplot(probabilities, main = "Approximation of P(x)", xlab = "Number of Trials (x)", ylab = "Probability")
+
+cat("Mean number of trials:", mean_trials)
+
+```
+
+#### 1.3
+
+answer:
+
+Rx={-5,10,20}
+
+P(x=10)=19/choose(20,2)=1/10=0.1
+
+P(x=20)=38/choose(20,2)=1/5=0.2
+
+P(x=-5)=1-P(x=10)-P(x=20)=1-0.1-0.2=7/10=0.7
+
+E[x]=-5xP(x=-5)+10xP(x=10)+20xP(x=20)= -5x0.7+10x0.1+20x0.2
+=3/2=1.5
+
+```{r 1.3}
+n_simulations <- 10000
+
+profit_10 <- 0  
+profit_20 <- 0  
+loss <- 0       
+
+for (i in 1:n_simulations) {
+  ball1 <- sample(1:20, 1)
+  ball2 <- sample(1:20, 1)
+  
+  if (ball1 + ball2 == 20) {
+    profit_10 <- profit_10 + 10
+  } else if (abs(ball1 - ball2) == 1) {
+    profit_20 <- profit_20 + 20
+  } else {
+    loss <- loss + 5
+  }
+}
+
+prob_10 <- profit_10 / (n_simulations * 10)
+prob_20 <- profit_20 / (n_simulations * 20)
+prob_loss <- loss / (n_simulations * 5)
+
+barplot(c(prob_10, prob_20, prob_loss), names.arg = c("Profit 10", "Profit 20",
+                                                      "Loss"),
+        xlab = "Profit/Loss", ylab = "Probability",
+        main = "Probability Distribution of Player's Profit",
+        col = c("green", "blue", "red"),ylim=c(0,1))
+```
+
+## Question 2
+The time t (in minutes) required to assemble a Logi robot is a random variable
+with the following distribution:
+t P(t)
+2 0.1
+3 0.1
+4 0.3
+5 0.2
+6 0.2
+7 0.1
+
+#### 2.1
+
+answer:
+
+E[x]=2x0.1+3x0.1+4x0.3+5x0.2+6x0.2+7x0.1=23/5=4.6
+ 
+#### 2.2
+
+answer:
+
+Y={2,2,2+0.5x1,2+0.5x2,2+0.5x3,2+0.5x4}={2,2.5,3,3.5,4}
+
+Fy(2)=P(Y<=2)=P(t=6)+P(t=7)=0.2+0.1=0.3
+
+Fy(2.5)=P(Y<=2.5)=F(2)+P(Y=2.5)=0.3+0.2=0.5
+
+Fy(3)=P(Y<=3)=F(2.5)+P(Y=3)=0.5+0.3=0.8
+
+Fy(3.5)=P(Y<=3.5)=F(3)+P(Y=3.5)=0.8+0.1=0.9
+
+Fy(4)=P(Y<=4)=F(3.5)+P(Y=4)=0.9+0.1=1
+
+E[Y]=2x0.1+2x0.2+2.5x0.2+3x0.3+3.5x0.1+4x0.1=2.75
+
+E[Y^2]=4x0.1+4x0.2+6.25x0.2+
+9x0.3+12.25x0.1+16x0.1=7.975
+
+Var(Y)=E[Y^2]-E[Y]^2 =7.975-(2.75^2)=0.4125
+
+## Question 3
+The Probability function of a random variable X is given:
+P(x) = w/x
+It is also given that Rx={1,3,5,7}.
+
+#### 3.1
+
+answer:
+
+P(x)=(w/1)+(w/3)+(w/5)+(w/7)=1
+
+P(x)=(105w+35w+21w+15w)/105=1
+
+P(x)=176w/105=1
+
+w=105/176
+
+#### 3.2
+
+answer:
+
+P(2<=x<=6)=P(x=3)+P(x=5)=(w/3)+(w/5)=((105/176)/3)+((105/176)/5)=7/22
+
+#### 3.3
+
+answer:
+
+F(x)=P(x<=5)=P(x=1)+P(x=3)+P(x=5)=((105/176)/1)+((105/176)/3)+((105/176)/5)=
+161/176
+
+## Question 4
+In an experiment we roll 2 dice.
+Let X = the sum of the 2 cubes and Y = the difference (in absolute value)
+between the results.
+
+#### 4.1
+
+answer:
+
+P(x=2)=1/36
+
+P(x=3)=2/36
+
+P(x=4)=3/36
+
+p(x=5)=4/36
+
+P(x=6)=5/36
+
+P(x=7)=6/36
+
+P(x=8)=5/36
+
+P(x=9)=4/36
+
+P(x=10)=3/36
+
+P(x=11)=2/36
+
+P(x=12)=1/36
+
+#### 4.2
+
+answer:
+
+y={0,1,2,3,4,5}
+
+P(y=0)=6/36
+
+P(y=1)=10/36
+
+P(y=2)=8/36
+
+P(y=3)=6/36
+
+P(y=4)=4/36
+
+p(y=5)=2/36
+
+Fy(a<0) = 0
+
+Fy(0<=a<1)=6/36
+
+Fy(1<=a<2)=6/36+10/36=4/9
+
+Fy(2<=a<3)=4/9+8/36=2/3
+
+Fy(3<=a<4)=2/3+6/36=5/6
+
+Fy(4<=a<5)=5/6+4/36=17/18
+
+Fy(5<=a)=17/18+2/36=1
+
+#### 4.3
+
+answer:
+
+P(2<=Y<=5 and Y>=1)=P(y=2)+P(y=3)+P(y=4)+P(y=5)=8/36+6/36+4/36+2/36=5/9
+
+P(Y>=1)=P(y=1)+P(y=2)+P(y=3)+P(y=4)+P(y=5)=10/36+8/36+6/36+4/36+2/36=5/6
+
+P(2 <= Y <= 5 | Y >= 1)=P(2<=Y<=5 and Y>=1)/P(Y>=1)=(5/9)/(5/6)=2/3
+
+# Good luck!
